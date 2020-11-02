@@ -22,8 +22,8 @@ import random
 
 class Waiter:
 
-    def __init__(self, peak_hour=3600, multiplier=25):
-        self.peak_hour = peak_hour
+    def __init__(self, peak_hour=1, multiplier=25):
+        self.peak_hour = peak_hour * 3600
         self.multiplier = multiplier
         self.loglist = []
         self.activity = 1 #Ranges from 0 - 1
@@ -37,7 +37,7 @@ class Waiter:
         timestamp = (now - midnight).seconds
         k = -0.4
         d = 6.3
-        r = 1
+        r = self.peak_hour / 3600
         c = 3600
         r = r/4.6211
         self.activity = -(1 + k) * math.sin((((d*c)/(24*c)) * (timestamp/3600) - r - 7.9)) - k
@@ -46,12 +46,12 @@ class Waiter:
     def get_noise(self):
         return random.random() * self.activity * self.multiplier
 
-    def wait(self, multiplier):
+    def wait(self, multiplier, args=[]):
         """Organic waiting function that avoids rate-limiting"""
         self.calculate_activity()
         magnitude = self.activity * self.multiplier + self.get_noise() + random.randrange(1, 2) * multiplier
 
         timestamp = time.time
-        print("Waiting for {0} seconds.".format(magnitude))
+        if("--log" in args): print("Waiting for {0} seconds.".format(magnitude))
         time.sleep(magnitude)
         self.add(timestamp, magnitude)

@@ -16,7 +16,7 @@
 # along with IGBot.  If not, see <http://www.gnu.org/licenses/>.
 
 from src.core import driver as drv
-from src.core.wait import wait
+from src.core.wait import Waiter
 from selenium.webdriver.common.keys import Keys
 
 class Session:
@@ -32,18 +32,33 @@ class Session:
         """
 
         Args:
-            username (string): the username
-            password (string): the password
+            username (string): Account username.
+            password (string): Account password.
             args (list, optional): Arguments. Defaults to [].
         """
+        self.waiter = Waiter()
         self.username = username
         self.password = password
         self.driver = drv.make_driver()
         self.login(username, password)
+        
+    
+    def wait(self):
+        self.waiter.wait()
 
     def login(self, username, password, args=[]):
+        """Logs into the Instagram account for the session.
+
+        Args:
+            username ([type]): Account username.
+            password ([type]): Account password.
+            args (list, optional): The arguments. Defaults to [].
+        """
         self.driver.get("https://www.instagram.com/")
-        wait()
+        self.wait()
         self.driver.find_element_by_xpath("//input[@name='username']").send_keys(username)
         self.driver.find_element_by_xpath("//input[@name='password']").send_keys(password)
         self.driver.find_element_by_xpath("//button[contains(.,'Log In')]").click()
+
+    def follow(self, username):
+        self.driver.get("https://www.instagram.com/{0}/".format())

@@ -16,9 +16,10 @@
 # along with IGBot.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-from src import main
+from src import session.Session
 
 username = ""
 password = ""
+main = session.Session
 
 main.start_session(username, password, sys.argv[0:])

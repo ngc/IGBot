@@ -18,6 +18,7 @@
 from src.core import driver as drv
 from src.core.wait import Waiter
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import *
 
 class Session:
     """A botted Instagram session.
@@ -43,8 +44,8 @@ class Session:
         self.login(username, password)
         
     
-    def wait(self):
-        self.waiter.wait()
+    def wait(self, multiplier=1):
+        self.waiter.wait(multiplier)
 
     def login(self, username, password, args=[]):
         """Logs into the Instagram account for the session.
@@ -59,6 +60,12 @@ class Session:
         self.driver.find_element_by_xpath("//input[@name='username']").send_keys(username)
         self.driver.find_element_by_xpath("//input[@name='password']").send_keys(password)
         self.driver.find_element_by_xpath("//button[contains(.,'Log In')]").click()
+        self.wait(2)
 
     def follow(self, username):
-        self.driver.get("https://www.instagram.com/{0}/".format())
+        try:
+            self.driver.get("https://www.instagram.com/{0}/".format(username))
+            self.wait()
+            self.driver.find_element_by_xpath("//button[contains(.,'Follow')]").click()
+        except NoSuchElementException:
+            print("ERROR: Already Following")

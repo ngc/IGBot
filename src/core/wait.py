@@ -46,10 +46,10 @@ class Waiter:
     def get_noise(self):
         return random.random() * self.activity * self.multiplier
 
-    def wait(self):
+    def wait(self, multiplier):
         """Organic waiting function that avoids rate-limiting"""
         self.calculate_activity()
-        magnitude = self.activity * self.multiplier + self.get_noise()
+        magnitude = self.activity * self.multiplier + self.get_noise() + random.randrange(1, 2) * multiplier
 
         timestamp = time.time
         print("Waiting for {0} seconds.".format(magnitude))

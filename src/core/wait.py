@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with IGBot.  If not, see <http://www.gnu.org/licenses/>.
 
+from time import sleep
+
 def wait():
     """Organic waiting function that avoids rate-limiting"""
-    
+    sleep(1)

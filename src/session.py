@@ -16,7 +16,8 @@
 # along with IGBot.  If not, see <http://www.gnu.org/licenses/>.
 
 from src.core import driver as drv
-from src.core import wait
+from src.core.wait import wait
+from selenium.webdriver.common.keys import Keys
 
 class Session:
     """A botted Instagram session.
@@ -31,22 +32,18 @@ class Session:
         """
 
         Args:
-            username ([type]): [description]
-            password ([type]): [description]
-            args (list, optional): [description]. Defaults to [].
+            username (string): the username
+            password (string): the password
+            args (list, optional): Arguments. Defaults to [].
         """
         self.username = username
         self.password = password
+        self.driver = drv.make_driver()
+        self.login(username, password)
 
-
-    def start(username, password, args=[], routine):
-        """Starts a botted Instagram session.
-
-        Args:
-            username (string): username for account session.
-            password (string): password for account session
-            args (list, optional): Arguments. Defaults to an empty list (not required).
-        """
-        driver = drv.get_driver()
-        driver.get("https://www.google.com")
-    
+    def login(self, username, password, args=[]):
+        self.driver.get("https://www.instagram.com/")
+        wait()
+        self.driver.find_element_by_xpath("//input[@name='username']").send_keys(username)
+        self.driver.find_element_by_xpath("//input[@name='password']").send_keys(password)
+        self.driver.find_element_by_xpath("//button[contains(.,'Log In')]").click()

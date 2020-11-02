@@ -24,7 +24,7 @@ from selenium.webdriver.chrome.options import Options
 import os
 from time import sleep
 
-def get_driver(args=[], url="https://www.instagram.com"):
+def make_driver(args=[], url="https://www.instagram.com"):
     """Creates a webdriver based on a set of arguments and an initial URL.
 
     Args:

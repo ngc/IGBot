@@ -40,6 +40,7 @@ class Waiter:
         r = self.peak_hour / 3600
         c = 3600
         r = r/4.6211
+        
         self.activity = -(1 + k) * math.sin((((d*c)/(24*c)) * (timestamp/3600) - r - 7.9)) - k
         self.activity = 1 - self.activity
 

@@ -19,11 +19,11 @@ from src.core import driver as drv
 from src.core.wait import Waiter
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
-from explicit import waiter, XPATH
 from bs4 import BeautifulSoup
 from src.urls import INSTAGRAM
 import itertools
 import locale
+import requests
 from src.data import Database
 from dotenv import load_dotenv
 load_dotenv()
@@ -35,7 +35,7 @@ class Session:
     These methods use a selenium webdriver to execute actions needed to interact with Instagram as a service. 
     """
 
-    def __init__(self, username, password, args=[]):
+    def __init__(self, username, password, args={}):
         """Initialize Session.
 
         Args:
@@ -43,11 +43,11 @@ class Session:
             password (string): Account password.
             args (list, optional): Arguments. Defaults to [].
         """
-        self.waiter = Waiter(6.75)
+        self.waiter = Waiter(21)
         self.username = username
         self.password = password
         self.driver = drv.make_driver()
-        self.server_database = Database(self.username)
+        self.database = Database(self.username, args["BASE_DIR"])
         self.login(username, password)
         
     
@@ -130,7 +130,6 @@ class Session:
     def get_following(self, username):
         following = []
         self.driver.get(INSTAGRAM.format(username))
-        self.wait()
         done = 0
         while done < 3:
             done += 1
@@ -157,20 +156,34 @@ class Session:
         return following
 
 
-    def get_follower_count(self, username):
-        self.driver.get(INSTAGRAM.format(username))
-        self.wait(0.2)
-        followers_string = self.driver.find_elements_by_class_name("g47SY ")[1].text
-        return int(followers_string.replace(',', ''))
+    def get_followers_following(self, username):
+        try:
+            page = requests.get(INSTAGRAM.format(username))
 
-    def get_following_count(self, username):
-        self.driver.get(INSTAGRAM.format(username))
-        self.wait(0.2)
-        following_string = self.driver.find_elements_by_class_name("g47SY ")[2].text
-        return int(following_string.replace(',', ''))
+            soup = BeautifulSoup(page.text, 'html.parser')
+            results = soup.find("meta", property="og:description")
+            meta_string = results["content"]
+
+            number_string = ""
+            index = 0
+            for char in meta_string:
+                if(char == ' '): break
+                number_string += char
+                index += 1
+            followers = max(int(number_string.replace(',', '')), 1)
+
+            number_string = ""
+            index = meta_string.find(', ') + 2
+            for char in meta_string[index:]:
+                if(char == ' '): break
+                number_string += char
+            following = max(int(number_string.replace(',', '')), 1)
+
+            return (followers, following)
+        except:
+            return (1, 1)
 
     def get_worth(self, username):
         #following / followers
-        following = self.get_following_count(username)
-        followers = self.get_follower_count(username)
+        followers, following = self.get_followers_following(username)
         return following / followers

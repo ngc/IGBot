@@ -142,3 +142,4 @@ start.py
 *.pyc
 .vscode/*
 test.py
+users/*

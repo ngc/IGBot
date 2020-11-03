@@ -36,7 +36,7 @@ class Database(object):
             print("EXISTING DATABASE LOCATED")
     
     def base_dir(self):
-        os.chdir(self.base_dir)
+        os.chdir(self.BASE_DIR)
 
     def init_directory(self):
         self.base_dir()

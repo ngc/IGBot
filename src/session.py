@@ -26,6 +26,7 @@ import locale
 import requests
 from src.data import Database
 from dotenv import load_dotenv
+import time
 load_dotenv()
 
 class Session:
@@ -49,6 +50,9 @@ class Session:
         self.driver = drv.make_driver()
         self.database = Database(self.username, args["BASE_DIR"])
         self.login(username, password)
+        
+        #Data Dictionaries
+        self.follows_data = self.database.load("follows")
         
     
     def wait(self, multiplier=1):
@@ -84,6 +88,8 @@ class Session:
             self.driver.get("https://www.instagram.com/{0}/".format(username))
             self.wait()
             self.driver.find_element_by_xpath("//button[contains(.,'Follow')]").click()
+
+            self.follows_data[username] = {'timestamp': time.time(), 'followed_back': False}
         except NoSuchElementException:
             print("ERROR: Already Following")
 
@@ -125,7 +131,7 @@ class Session:
                 self.driver.execute_script("arguments[0].scrollIntoView();", last_follower)
             except:
                 break
-            return followers
+        return followers
 
     def get_following(self, username):
         following = []
@@ -187,3 +193,6 @@ class Session:
         #following / followers
         followers, following = self.get_followers_following(username)
         return following / followers
+
+    def close(self):
+        self.database.save(self.follows_data, "follows")

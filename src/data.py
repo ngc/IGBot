@@ -27,13 +27,6 @@ class Database(object):
         self.name = username
         self.BASE_DIR = BASE_DIR
         self.directory = self.init_directory()
-        os.chdir(self.directory)
-        if(not os.path.isfile('targets.json')):
-            self.database = self.save({})
-            print("DATABASE CREATED")
-        else:
-            self.database = self.directory + '/targets.json'
-            print("EXISTING DATABASE LOCATED")
     
     def base_dir(self):
         os.chdir(self.BASE_DIR)
@@ -46,16 +39,19 @@ class Database(object):
         os.chdir(self.name)
         return os.getcwd()
 
-    def save(self, dict):
+    def save(self, dict, name="targets"):
         os.chdir(self.directory)
-        with open('targets.json', 'w') as fp:
+        with open('{0}.json'.format(name), 'w') as fp:
             json.dump(dict, fp, sort_keys=True, indent=4)
-        return self.directory + '/targets.json'
+        return self.directory + '/{0}.json'.format(name)
 
-    def load(self):
+    def load(self, name="targets"):
         os.chdir(self.directory)
-        with open('targets.json', 'r') as fp:
-            return json.load(fp)
-
+        try:
+            with open('{0}.json'.format(name), 'r') as fp:
+                return json.load(fp)
+        except FileNotFoundError:
+            self.save({}, name)
+            return {}
 
 

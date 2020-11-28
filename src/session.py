@@ -26,6 +26,9 @@ import locale
 import requests
 from src.data import Database
 from dotenv import load_dotenv
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 import time
 load_dotenv()
 
@@ -44,7 +47,7 @@ class Session:
             password (string): Account password.
             args (list, optional): Arguments. Defaults to [].
         """
-        self.waiter = Waiter(21)
+        self.waiter = Waiter(23)
         self.username = username
         self.password = password
         self.driver = drv.make_driver()
@@ -104,61 +107,79 @@ class Session:
             print("ERROR: Already Following")
     
     def get_followers(self, username):
-        followers = []
-        self.driver.get(INSTAGRAM.format(username))
-        self.wait()
-        done = 0
-        while done < 3:
-            done += 1
-            try:
-                self.wait()
-                self.driver.find_element_by_css_selector("#react-root > section > main > div > header > section > ul > li:nth-child(2) > a").click()
-                done = 3
-            except:
-                print("Retrying...")
-
-        self.wait()
-
-        follower_css = "ul div li:nth-child({0}) a.notranslate"
-        for group in itertools.count(start = 1, step = 12):
-            try:
-                for follower_index in range(group, group + 12):
-                    user = self.driver.find_element_by_css_selector(follower_css.format(follower_index)).text
-                    if user != self.username:
-                        followers.append(user)
-                
-                last_follower = self.driver.find_element_by_css_selector(follower_css.format(follower_index))
-                self.driver.execute_script("arguments[0].scrollIntoView();", last_follower)
-            except:
-                break
-        return followers
-
-    def get_following(self, username):
+        following_count = self.get_followers_following(username)[0]
         following = []
         self.driver.get(INSTAGRAM.format(username))
-        done = 0
-        while done < 3:
-            done += 1
-            try:
-                self.wait()
-                self.driver.find_elements_by_class_name("-nal3 ")[2].click()
-                done = 3
-            except:
-                print("Retrying...")
+        # Click the 'Follower(s)' link
+        self.driver.find_element_by_partial_link_text("follower").click()
 
+        # Wait for the followers modal to load
+        xpath = "/html/body/div[4]/div/div/div[2]/div/div[2]"
         self.wait()
 
-        follower_css = "ul div li:nth-child({0}) a.notranslate"
-        for group in itertools.count(start = 1, step = 12):
-            try:
-                for follower_index in range(group, group + 12):
-                    user = self.driver.find_element_by_css_selector(follower_css.format(follower_index)).text
-                    following.append(user)
-                
-                last_follower = self.driver.find_element_by_css_selector(follower_css.format(follower_index))
-                self.driver.execute_script("arguments[0].scrollIntoView();", last_follower)
-            except:
+        SCROLL_PAUSE = 0.5  # Pause to allow loading of content
+        self.driver.execute_script("followersbox = document.getElementsByClassName('isgrP')[0];")
+        last_height = self.driver.execute_script("return followersbox.scrollHeight;")
+
+        # We need to scroll the followers modal to ensure that all followers are loaded
+        while True:
+            self.driver.execute_script("followersbox.scrollTo(0, followersbox.scrollHeight);")
+
+            # Wait for page to load
+            time.sleep(2.5)
+
+            # Calculate new scrollHeight and compare with the previous
+            new_height = self.driver.execute_script("return followersbox.scrollHeight;")
+            if new_height == last_height:
                 break
+            last_height = new_height
+
+        # Finally, scrape the followers
+        source = self.driver.page_source
+        soup = BeautifulSoup(source, 'html.parser')
+        user_elements = soup.findAll("a", {"class": "FPmhX"})
+
+        for element in user_elements:
+            following.append(element.text)
+            
+        return following
+
+    def get_following(self, username):
+        following_count = self.get_followers_following(username)[0]
+        following = []
+        self.driver.get(INSTAGRAM.format(username))
+        # Click the 'Follower(s)' link
+        self.driver.find_element_by_partial_link_text("following").click()
+
+        # Wait for the followers modal to load
+        xpath = "/html/body/div[4]/div/div/div[2]/div/div[2]"
+        self.wait()
+
+        SCROLL_PAUSE = 0.5  # Pause to allow loading of content
+        self.driver.execute_script("followersbox = document.getElementsByClassName('isgrP')[0];")
+        last_height = self.driver.execute_script("return followersbox.scrollHeight;")
+
+        # We need to scroll the followers modal to ensure that all followers are loaded
+        while True:
+            self.driver.execute_script("followersbox.scrollTo(0, followersbox.scrollHeight);")
+
+            # Wait for page to load
+            time.sleep(2.5)
+
+            # Calculate new scrollHeight and compare with the previous
+            new_height = self.driver.execute_script("return followersbox.scrollHeight;")
+            if new_height == last_height:
+                break
+            last_height = new_height
+
+        # Finally, scrape the followers
+        source = self.driver.page_source
+        soup = BeautifulSoup(source, 'html.parser')
+        user_elements = soup.findAll("a", {"class": "FPmhX"})
+
+        for element in user_elements:
+            following.append(element.text)
+            
         return following
 
 

@@ -143,3 +143,6 @@ start.py
 .vscode/*
 test.py
 users/*
+src/core/__pycache__/__init__.cpython-38.pyc
+src/__pycache__/main.cpython-38.pyc
+src/__pycache__/__init__.cpython-38.pyc

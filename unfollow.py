@@ -24,5 +24,20 @@ interface.print_logo()
 args = {'BASE_DIR': "/home/nathan/Development/IGBot"}
 main = Session('leah.g4361', 'U0luj8N6&4Ei', args)
 
-database = main.database.load()
+database = main.database
+following = database.load("following")
 
+if(following == {}):
+    following_list = main.get_following(main.username)
+    for user in following_list:
+        following[user] = {"lol":"lol"}
+    database.save(following, "following")
+else:
+    following_list = []
+    for item in following.keys():
+        following_list.append(item)
+
+for item in following_list[:50]:
+    main.unfollow(item)
+    following.pop(item, None)
+    database.save(following, "following")

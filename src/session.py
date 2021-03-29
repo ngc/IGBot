@@ -182,6 +182,45 @@ class Session:
             
         return following
 
+    def mass_unfollow(self, username, amount, blacklist=[]):
+        following_count = self.get_followers_following(username)[0]
+        following = []
+        self.driver.get(INSTAGRAM.format(username))
+        # Click the 'Follower(s)' link
+        self.driver.find_element_by_partial_link_text("following").click()
+        count = 0
+
+        # Wait for the followers modal to load
+        xpath = "/html/body/div[4]/div/div/div[2]/div/div[2]"
+        self.wait()
+
+        SCROLL_PAUSE = 0.5  # Pause to allow loading of content
+        self.driver.execute_script("followersbox = document.getElementsByClassName('isgrP')[0];")
+        last_height = self.driver.execute_script("return followersbox.scrollHeight;")
+
+        # We need to scroll the followers modal to ensure that all followers are loaded
+        while True:
+            self.driver.execute_script("followersbox.scrollTo(0, followersbox.scrollHeight);")
+            try:
+                print(self.driver.find_elements_by_xpath('//button[text()="Following"]'))
+                for button in self.driver.find_elements_by_xpath('//button[text()="Following"]'):
+                    button.click()
+                    time.sleep(0.5)
+                    self.driver.find_element_by_xpath("//button[contains(.,'Unfollow')]").click()
+                    print("Unfollowed {0}, out of {1}".format(count + 1, amount + 1))
+                    time.sleep(0.1)
+                    count += 1
+                    if(count > amount): return
+            except Exception as e:
+                print(e)
+            # Wait for page to load
+            time.sleep(2.5)
+
+            # Calculate new scrollHeight and compare with the previous
+            new_height = self.driver.execute_script("return followersbox.scrollHeight;")
+            if new_height == last_height:
+                break
+            last_height = new_height
 
     def get_followers_following(self, username):
         try:
